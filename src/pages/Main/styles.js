@@ -27,7 +27,7 @@ export const Form = styled.form`
 
   input {
     flex: 1;
-    border: 1px solid #eee;
+    border: 1px solid ${props => (props.hasErro ? 'red' : '#eee')};
     padding: 10px 15px;
     border-radius: 4px;
     font-size: 16px;
@@ -117,4 +117,22 @@ export const DeleteButton = styled.button`
   justify-content: center;
   justify-items: center;
   height: 40px;
+`;
+
+export const InputForm = styled.input.attrs(props => ({
+  type: 'text',
+  placeholder: 'Adicionar repositório',
+  hasErro: props.hasErro,
+}))`
+  flex: 1;
+  border: 1px solid #eee;
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-size: 16px;
+
+  /* ${props =>
+    props.hasErro &&
+    css`
+      border-color: red !important;
+    `} */
 `;

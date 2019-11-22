@@ -1,3 +1,4 @@
+/* eslint-disable no-throw-literal */
 /* eslint-disable react/sort-comp */
 /* eslint-disable react/no-unused-state */
 import React, { Component } from 'react';
@@ -7,12 +8,13 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import Container from '../../components/Container';
 
-import { Form, SubmitButton, DeleteButton, List } from './styles';
+import { Form, SubmitButton, DeleteButton, List, InputForm } from './styles';
 
 export default class Main extends Component {
   // criando um state
   state = {
     newRepo: '',
+    hasErro: false,
     repositories: [],
     loading: false,
   };
@@ -28,21 +30,36 @@ export default class Main extends Component {
     this.setState({ loading: true });
 
     // atribuindo o valor do state a variavel newRepo
-    const { newRepo, repositories } = this.state;
-    // rota para obter os repositórios do github
-    const response = await api.get(`/repos/${newRepo}`);
+    try {
+      const { newRepo, repositories } = this.state;
 
-    // capturando apenas o nome do projeto
-    const data = {
-      name: response.data.full_name,
-    };
+      // verificando se o input está vazio
+      if (newRepo === '') throw 'Você precisa inserir o nome de um repositório';
 
-    this.setState({
-      // criando um novo vetor baseado no vetor já existente: imutabilidade
-      repositories: [...repositories, data],
-      newRepo: '',
-      loading: false,
-    });
+      // verificando se o repositório não está duplicado
+      const hasRepository = repositories.find(
+        repository => repository.name === newRepo
+      );
+
+      if (hasRepository) throw 'O repositório já existe';
+
+      const response = await api.get(`/repos/${newRepo}`);
+
+      // capturando apenas o nome do projeto
+      const data = {
+        name: response.data.full_name,
+      };
+
+      this.setState({
+        // criando um novo vetor baseado no vetor já existente: imutabilidade
+        repositories: [...repositories, data],
+        newRepo: '',
+        loading: false,
+        hasErro: false,
+      });
+    } catch (error) {
+      this.setState({ loading: false, hasErro: true });
+    }
   };
 
   handleDelete = repo => {
@@ -71,7 +88,7 @@ export default class Main extends Component {
   }
 
   render() {
-    const { newRepo, repositories, loading } = this.state;
+    const { newRepo, repositories, loading, hasErro } = this.state;
 
     return (
       <Container>
@@ -80,13 +97,8 @@ export default class Main extends Component {
           Repositórios
         </h1>
 
-        <Form onSubmit={this.handleSubmit}>
-          <input
-            type="text"
-            placeholder="Adicionar repositório"
-            value={newRepo}
-            onChange={this.handleInputChange}
-          />
+        <Form onSubmit={this.handleSubmit} hasErro={hasErro}>
+          <InputForm value={newRepo} onChange={this.handleInputChange} />
           <SubmitButton loading={loading ? 1 : 0}>
             {loading ? (
               <FaSpinner color="#FFF" size={14} />
